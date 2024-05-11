@@ -9,16 +9,40 @@ def all_products(request):
     
     products = Product.objects.all()
     query = None # used for search bar logic, below
-    categories = None # used for category sorting logic in nav bar
-
-    # SEARCH BAR LOGIC!!!!
+    categories = None # used for category filtering logic in nav bar
+    sort = None # used for sorting logic in nav bar
+    direction = None # used for sorting logic in nav bar
 
     if request.GET:
+
+        # Sort logic
+
+        if 'sort' in request.GET:
+            sortkey = request.GET['sort']
+            sort = sortkey
+            if sortkey == 'name':
+                sortkey = 'lower_name'
+                products = products.annotate(lower_name=Lower('name'))
+
+            if 'direction' in request.GET:
+                direction = request.GET['direction']
+                if direction == 'desc':
+                    sortkey = f'-{sortkey}'
+            products = products.order_by(sortkey)
+        
+        # Sort logic part 1 end.
+
+        # Category filtering logic
+        
         if 'category' in request.GET:
             categories = request.GET['category'].split(',')
             products = products.filter(category__name__in=categories)
             categories = Category.objects.filter(name__in=categories)
 
+        # Category filtering logic end.
+
+        # SEARCH BAR LOGIC!!!!
+        
         if 'q' in request.GET:
             query = request.GET['q']
             if not query:
@@ -27,13 +51,16 @@ def all_products(request):
             
             queries = Q(name__icontains=query) | Q(description__icontains=query)
             products = products.filter(queries)
-        
-    # Search bar logic end.
+            
+        # Search bar logic end.
+
+    current_sorting = f'{sort}_{direction}' # extra bit for sort logic
 
     context = {
         'products': products,
         'search_term': query, # needed for search bar logic
-        'current_categories': categories,
+        'current_categories': categories, # needed for category filtering logic
+        'current_sorting': current_sorting, # needed for sort logic
     }
     
     return render(request, 'products/products.html', context)
