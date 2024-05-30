@@ -20,20 +20,20 @@ class OrderForm(forms.ModelForm):
             'full_name': 'Full Name',
             'email': 'Email Address',
             'phone_number': 'Phone Number',
-            'country': 'Country',
             'postcode': 'Postal Code',
             'town_or_city': 'Town or City',
             'street_address1': 'Street Address 1',
             'street_address2': 'Street Address 2',
-            'county': 'County',
+            'county': 'County, State or Locality',
         }
 
         self.fields['full_name'].widget.attrs['autofocus'] = True # cursor starts in full name field
         for field in self.fields:
-            if self.fields[field].required:
-                placeholder = f'{placeholders[field]} *' # add stars to required fields
-            else:
-                placeholder = placeholders[field]
-            self.fields[field].widget.attrs['placeholder'] = placeholder # set placeholder attributes to values listed above
+            if field != 'country':
+                if self.fields[field].required:
+                    placeholder = f'{placeholders[field]} *' # add stars to required fields
+                else:
+                    placeholder = placeholders[field]
+                self.fields[field].widget.attrs['placeholder'] = placeholder # set placeholder attributes to values listed above
             self.fields[field].widget.attrs['class'] = 'stripe-style-input'
             self.fields[field].label = False # remove form field labels since placeholders are set
